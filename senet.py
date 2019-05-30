@@ -323,7 +323,7 @@ class SENet(nn.Module):
             downsample_kernel_size=downsample_kernel_size,
             downsample_padding=downsample_padding
         )
-        self.avg_pool = nn.AvgPool2d(7, stride=1)
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.dropout = nn.Dropout(dropout_p) if dropout_p is not None else None
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
@@ -365,7 +365,6 @@ class SENet(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
-        print("x", x.shape)
         x = self.logits(x)
         return x
 

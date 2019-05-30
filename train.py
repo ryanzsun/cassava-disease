@@ -39,7 +39,7 @@ def train(resume = False):
                                 std=[0.229, 0.224, 0.225])
         ])
     val_data = CassavaDataset(mode="val", transform=val_transform)
-    val_loader = DataLoader(val_data, batch_size=2, shuffle=False)
+    val_loader = DataLoader(val_data, batch_size=12, shuffle=False)
 
     train_data = CassavaDataset(mode="train", transform=train_transform)
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4)
@@ -102,13 +102,18 @@ def train(resume = False):
                 optimizer.step()
 
                 running_loss += loss.item()
-            
-            model.eval()
+
+            running_loss = running_loss / count
+            print(np.floor(time.time() - start_time))
+            print("[%d/%d] Loss: %.5f" % (i + 1, epoches, running_loss))
+            running_loss_list.append(running_loss)            
             
             result_list = []
             label_list = []
             running_loss = 0
-            loss_count = 0
+
+            model.eval()
+
             for idx, data in enumerate(val_loader):
                 img, label = data
                 img = Variable(img).cuda()
@@ -123,23 +128,20 @@ def train(resume = False):
                 result_list += list(output.cpu().numpy())
                 label_list += list(label.cpu().numpy())
             
-            count = 0
-            for i in range(len(result_list)):
-                if result_list[i] == label_list[i]:
-                    count += 1
+            acc_count = 0
+            for r in range(len(result_list)):
+                if result_list[r] == label_list[r]:
+                    acc_count += 1
 
-            acc = count/len(result_list)
+            acc = acc_count/len(result_list)
             if acc > best_acc:
+                print("current best", acc)
                 torch.save(model,'se_resnext.pt')
                 best_acc = acc
 
             exp_lr_scheduler.step()
                 
 
-            running_loss = running_loss / count
-            print(np.floor(time.time() - start_time))
-            print("[%d/%d] Loss: %.5f" % (i + 1, epoches, running_loss))
-            running_loss_list.append(running_loss)
 
 
         file = open("se_resnext_loss_record.txt","w")
