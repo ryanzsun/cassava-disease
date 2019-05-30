@@ -64,7 +64,7 @@ def test():
     df = pd.read_csv("sample_submission_file.csv")
     for i in range(len(result_list)):
         df["Category"][i] = result_list[i]
-    df.to_csv("sample_submission_file_2.csv", index=False)
+    df.to_csv("sample_submission_file_3.csv", index=False)
 
 
 

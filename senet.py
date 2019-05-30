@@ -7,6 +7,7 @@ from __future__ import print_function, division, absolute_import
 from collections import OrderedDict
 import math
 
+import torch
 import torch.nn as nn
 from torch.utils import model_zoo
 
@@ -324,7 +325,7 @@ class SENet(nn.Module):
         )
         self.avg_pool = nn.AvgPool2d(7, stride=1)
         self.dropout = nn.Dropout(dropout_p) if dropout_p is not None else None
-        self.last_linear = nn.Linear(512 * block.expansion, num_classes)
+        self.fc = nn.Linear(512 * block.expansion, num_classes)
 
     def _make_layer(self, block, planes, blocks, groups, reduction, stride=1,
                     downsample_kernel_size=1, downsample_padding=0):
@@ -359,11 +360,12 @@ class SENet(nn.Module):
         if self.dropout is not None:
             x = self.dropout(x)
         x = x.view(x.size(0), -1)
-        x = self.last_linear(x)
+        x = self.fc(x)
         return x
 
     def forward(self, x):
         x = self.features(x)
+        print("x", x.shape)
         x = self.logits(x)
         return x
 
@@ -372,7 +374,7 @@ def initialize_pretrained_model(model, num_classes, settings):
     assert num_classes == settings['num_classes'], \
         'num_classes should be {}, but is {}'.format(
             settings['num_classes'], num_classes)
-    model.load_state_dict(model_zoo.load_url(settings['url']))
+    model.load_state_dict(model_zoo.load_url(settings['url']), strict=False)
     model.input_space = settings['input_space']
     model.input_size = settings['input_size']
     model.input_range = settings['input_range']
@@ -439,6 +441,7 @@ def se_resnext101_32x4d(num_classes=1000, pretrained='imagenet'):
                   downsample_kernel_size=1, downsample_padding=0,
                   num_classes=num_classes)
     if pretrained is not None:
-        settings = pretrained_settings['se_resnext101_32x4d'][pretrained]
-        initialize_pretrained_model(model, num_classes, settings)
+        # settings = pretrained_settings['se_resnext101_32x4d'][pretrained]
+        # initialize_pretrained_model(model, num_classes, settings)
+        model.load_state_dict(torch.load("se_resnext101_32x4d-3b2fe3d8.pth"), strict=False)
     return model

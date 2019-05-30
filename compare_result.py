@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 lmh = pd.read_csv("./train_650_svm_submission-1.csv")
-sz = pd.read_csv("./sample_submission_file_2.csv")
+sz = pd.read_csv("./sample_submission_file_1.csv")
 
 # print(lmh)
 # print(sz)
