@@ -9,6 +9,7 @@ from torch.autograd import Variable as V
 import cv2
 import numpy as np
 import os
+import random
 
 def randomHueSaturationValue(image, hue_shift_limit=(-180, 180),
                              sat_shift_limit=(-255, 255),
@@ -29,7 +30,7 @@ def randomHueSaturationValue(image, hue_shift_limit=(-180, 180),
 
     return image
 
-def randomShiftScaleRotate(image, mask,
+def randomShiftScaleRotate(image, 
                            shift_limit=(-0.0, 0.0),
                            scale_limit=(-0.0, 0.0),
                            rotate_limit=(-0.0, 0.0), 
@@ -61,12 +62,9 @@ def randomShiftScaleRotate(image, mask,
                                     borderValue=(
                                         0, 0,
                                         0,))
-        mask = cv2.warpPerspective(mask, mat, (width, height), flags=cv2.INTER_LINEAR, borderMode=borderMode,
-                                   borderValue=(
-                                       0, 0,
-                                       0,))
 
-    return image, mask
+
+    return image
 
 def randomHorizontalFlip(image, mask, u=0.5):
     if np.random.random() < u:
@@ -89,13 +87,13 @@ def randomRotate90(image, mask, u=0.5):
 
     return image, mask
 
-def randomCrop(image, width = 448, height = 448):
-    assert image.shape[0] >= height
-    assert image.shape[1] >= width
-    x = random.randint(0, img.shape[1] - width)
-    y = random.randint(0, img.shape[0] - height)
-    img = img[y:y+height, x:x+width]
-    return img
+def randomCrop(image, width = 500, height = 500):
+    assert image.shape[0] >= height, image.shape
+    assert image.shape[1] >= width, image.shape
+    x = random.randint(0, image.shape[1] - width)
+    y = random.randint(0, image.shape[0] - height)
+    image = image[y:y+height, x:x+width]
+    return image
 
 
 

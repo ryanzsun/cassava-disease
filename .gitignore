@@ -1,0 +1,6 @@
+/data/
+*.pt
+*.pth
+*.csv
+*.pyc
+*.txt
