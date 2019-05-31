@@ -16,11 +16,15 @@ from dataloader import *
 from inception_resnet import *
 from senet import *
 from resnet import *
+from densenet import *
+from scipy.special import binom
+from losses import *
+
 
 def train(resume = False):
-    learning_rate = 3e-3
-    epoches = 100
-    batch_size = 12
+    learning_rate = 3e-4
+    epoches = 40
+    batch_size = 20
 
     train_transform = transforms.Compose([
         transforms.ToPILImage(),
@@ -39,20 +43,20 @@ def train(resume = False):
                                 std=[0.229, 0.224, 0.225])
         ])
     val_data = CassavaDataset(mode="val", transform=val_transform)
-    val_loader = DataLoader(val_data, batch_size=12, shuffle=False)
+    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
 
     train_data = CassavaDataset(mode="train", transform=train_transform)
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4)
     
 
     if resume:
-        learning_rate = 3e-3
-        model = torch.load("se_resnext.pt", map_location=lambda storage, loc: storage)
+        model = torch.load("densenet121.pt", map_location=lambda storage, loc: storage)
     else:
 
         # model = inceptionresnetv2(num_classes=5, pretrained='imagenet')
         # model = resnext50_32x4d(pretrained=True, num_classes = 5)
-        model = se_resnext101_32x4d(num_classes=5, pretrained='imagenet')
+        # model = se_resnext101_32x4d(num_classes=5, pretrained='imagenet')
+        model = densenet121(pretrained=True, num_classes = 5)
         model = torch.nn.DataParallel(model)
 
 
@@ -63,12 +67,13 @@ def train(resume = False):
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.0005)
     # exp_lr_scheduler = lr_scheduler.CosineAnnealingLR(optimizer, epoches, eta_min=1e-7)
     # exp_lr_scheduler = CosineWithRestarts(optimizer, T_max = 10, factor = 2)
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+    exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[20,30,35], gamma=0.5)
     # exp_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode = "min", verbose = True)
 
     running_loss_list = []
     best_acc = 0
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = FocalLoss()
 
     if train:
         print("start training")
@@ -136,22 +141,23 @@ def train(resume = False):
             acc = acc_count/len(result_list)
             if acc > best_acc:
                 print("current best", acc)
-                torch.save(model,'se_resnext.pt')
+                torch.save(model,'densenet121.pt')
                 best_acc = acc
 
             exp_lr_scheduler.step()
                 
+        if i %10 == 0:
+            torch.save(model, 'densenet121-May30.pt')
 
 
-
-        file = open("se_resnext_loss_record.txt","w")
+        file = open("densenet121_loss_record.txt","w")
         for l in running_loss_list:
             file.write("%s\n" % l)
         file.close()
-        torch.save(model, 'se_resnext-May30.pt')
+        torch.save(model, 'densenet121-May30.pt')
 
 
-    
+
 
 
 if __name__ == '__main__':
