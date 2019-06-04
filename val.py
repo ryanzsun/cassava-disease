@@ -30,7 +30,7 @@ def val():
     val_data = CassavaDataset(mode="val", transform=val_transform)
     val_loader = DataLoader(val_data, batch_size=2, shuffle=False)
 
-    model = torch.load("resnext.pt")
+    model = torch.load("densenet121.pt")
 
     model.eval()
 

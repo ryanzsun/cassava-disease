@@ -23,8 +23,8 @@ from losses import *
 
 def train(resume = False):
     learning_rate = 3e-4
-    epoches = 40
-    batch_size = 20
+    epoches = 50
+    batch_size = 8
 
     train_transform = transforms.Compose([
         transforms.ToPILImage(),
@@ -50,14 +50,18 @@ def train(resume = False):
     
 
     if resume:
-        model = torch.load("densenet121.pt", map_location=lambda storage, loc: storage)
+        learning_rate = 3e-5
+        model = torch.load("densenet201.pt", map_location=lambda storage, loc: storage)
+
     else:
 
         # model = inceptionresnetv2(num_classes=5, pretrained='imagenet')
         # model = resnext50_32x4d(pretrained=True, num_classes = 5)
         # model = se_resnext101_32x4d(num_classes=5, pretrained='imagenet')
-        model = densenet121(pretrained=True, num_classes = 5)
+        # model = senet154(num_classes=5, pretrained='imagenet')
+        model = densenet201(pretrained=True, num_classes = 5)
         model = torch.nn.DataParallel(model)
+
 
 
     model.cuda()
@@ -67,8 +71,9 @@ def train(resume = False):
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.0005)
     # exp_lr_scheduler = lr_scheduler.CosineAnnealingLR(optimizer, epoches, eta_min=1e-7)
     # exp_lr_scheduler = CosineWithRestarts(optimizer, T_max = 10, factor = 2)
-    exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[20,30,35], gamma=0.5)
     # exp_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode = "min", verbose = True)
+    exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[20,35,45], gamma=0.5)
+    # exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.5)
 
     running_loss_list = []
     best_acc = 0
@@ -141,20 +146,20 @@ def train(resume = False):
             acc = acc_count/len(result_list)
             if acc > best_acc:
                 print("current best", acc)
-                torch.save(model,'densenet121.pt')
+                torch.save(model,'densenet201.pt')
                 best_acc = acc
 
             exp_lr_scheduler.step()
                 
-        if i %10 == 0:
-            torch.save(model, 'densenet121-May30.pt')
+            if i %10 == 0:
+                torch.save(model, 'densenet201-May31.pt')
 
 
-        file = open("densenet121_loss_record.txt","w")
+        file = open("densenet201.txt","w")
         for l in running_loss_list:
             file.write("%s\n" % l)
         file.close()
-        torch.save(model, 'densenet121-May30.pt')
+        torch.save(model, 'densenet201-May31.pt')
 
 
 

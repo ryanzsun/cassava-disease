@@ -30,7 +30,7 @@ def test():
     test_data = CassavaDataset(mode="test", transform=test_transform)
     test_loader = DataLoader(test_data, batch_size=1, shuffle=False)
 
-    model = torch.load("se_resnext.pt")
+    model = torch.load("densenet201.pt")
     model.cuda()
     # model = torch.nn.DataParallel(model)
     model.eval()
@@ -64,7 +64,7 @@ def test():
     df = pd.read_csv("sample_submission_file.csv")
     for i in range(len(result_list)):
         df["Category"][i] = result_list[i]
-    df.to_csv("submission_file_senet.csv", index=False)
+    df.to_csv("submission_file_densenet.csv", index=False)
 
 
 
